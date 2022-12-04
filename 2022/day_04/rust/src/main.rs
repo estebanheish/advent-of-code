@@ -1,4 +1,4 @@
-#[derive(Debug)]
+#[derive(Debug, Copy, Clone)]
 struct Pair((u32, u32), (u32, u32));
 
 impl Pair {
@@ -12,19 +12,16 @@ impl Pair {
 }
 
 fn main() {
-    let parsed: Vec<Pair> = include_str!("../../input.txt")
-        .lines()
-        .map(|l| {
-            let (a, b) = l.split_once(",").unwrap();
-            let (x, y) = a.split_once("-").unwrap();
-            let (z, k) = b.split_once("-").unwrap();
-            Pair(
-                (x.parse().unwrap(), y.parse().unwrap()),
-                (z.parse().unwrap(), k.parse().unwrap()),
-            )
-        })
-        .collect();
+    let parsed = include_str!("../../input.txt").lines().map(|l| {
+        let (a, b) = l.split_once(",").unwrap();
+        let (x, y) = a.split_once("-").unwrap();
+        let (z, k) = b.split_once("-").unwrap();
+        Pair(
+            (x.parse().unwrap(), y.parse().unwrap()),
+            (z.parse().unwrap(), k.parse().unwrap()),
+        )
+    });
 
-    println!("{}", parsed.iter().filter(|pair| pair.inside()).count());
-    println!("{}", parsed.iter().filter(|pair| pair.overlap()).count());
+    println!("{}", parsed.clone().filter(|pair| pair.inside()).count());
+    println!("{}", parsed.filter(|pair| pair.overlap()).count());
 }
