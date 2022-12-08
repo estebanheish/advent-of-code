@@ -1,3 +1,5 @@
+from functools import reduce
+
 with open("input.txt") as f:
     trees = [ list(map(int, l)) for l in f.read().splitlines()]
 
