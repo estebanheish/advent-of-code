@@ -1,58 +1,32 @@
-use std::collections::HashMap;
-
 fn main() {
-    let parsed = include_str!("../../input.txt")
-        .lines()
-        .map(|i| {
-            let mut it = i.split(" ");
-            let ins = it.next().unwrap();
-            if ins == "noop" {
-                return (ins, 0);
-            }
-            (ins, it.next().unwrap().parse().unwrap())
-        })
-        .collect::<Vec<(&str, isize)>>();
-
-    let mut out: Vec<(isize, isize)> = vec![(0, 1)];
-    for (ins, n) in parsed {
-        let (cycle, register) = out.last().unwrap();
+    let input = include_str!("../../input.txt");
+    let mut out: Vec<isize> = vec![];
+    let mut state = 1;
+    for l in input.lines() {
+        let mut lit = l.split(" ");
+        let ins = lit.next().unwrap();
         if ins == "noop" {
-            out.push((cycle + 1, *register));
-            continue;
+            out.push(state);
         } else {
-            out.push((cycle + 2, register + n));
+            let n: isize = lit.next().unwrap().parse().unwrap();
+            out.push(state);
+            out.push(state);
+            state += n;
         }
     }
-
-    let mut signal_strength: Vec<isize> = Vec::new();
-    for n in [20, 60, 100, 140, 180, 220] {
-        let mut tmp = 0;
-        for (c, r) in &out {
-            if *c >= n {
-                break;
-            }
-            tmp = *r * n;
+    let mut part1: isize = 0;
+    for (c, r) in out.iter().enumerate() {
+        if [19, 59, 99, 139, 179, 219].contains(&c) {
+            part1 += (c as isize + 1) * r;
         }
-        signal_strength.push(tmp);
-    }
-
-    println!("{}", signal_strength.iter().sum::<isize>()); // part 1
-
-    let cpu: HashMap<isize, isize> = out.into_iter().collect();
-    let mut tmp = cpu.get(&0).unwrap();
-    for i in 1..=240 {
-        if let Some(r) = cpu.get(&i) {
-            tmp = r;
-        }
-
-        if [tmp - 1, *tmp, tmp + 1].contains(&(i % 40)) {
+        if [r - 1, *r, r + 1].contains(&(c as isize % 40)) {
             print!("#");
         } else {
             print!(".");
         }
-
-        if [40, 80, 120, 160, 200, 240].contains(&i) {
+        if [39, 79, 119, 159, 199, 239].contains(&c) {
             print!("\n");
         }
     }
+    println!("{part1}");
 }

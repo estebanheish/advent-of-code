@@ -13,7 +13,8 @@ BEGIN { path = "/" }
 END {
   out2 = 70000000
   for (i in sizes) {
-    if (sizes[i] < 100000 ) {
+    if (sizes[i] <= 100000 ) {
+      print sizes[i]
       out1 += sizes[i]
     }
     if (sizes["/"] - sizes[i] <= 40000000) {
