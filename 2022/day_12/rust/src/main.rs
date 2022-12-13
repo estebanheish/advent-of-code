@@ -1,103 +1,100 @@
-#[derive(Debug, Copy, Clone, Hash, Eq, PartialEq, PartialOrd, Ord)]
-struct Point(usize, usize);
+use std::collections::HashSet;
+use std::collections::VecDeque;
+use std::env;
 
-impl Point {
-    fn ns(&self, lx: usize, ly: usize) -> Vec<Self> {
-        let mut out = Vec::new();
-
-        // up
-        if self.0 > 0 {
-            out.push(Point(self.0 - 1, self.1));
-        }
-
-        // down
-        if self.0 < ly {
-            out.push(Point(self.0 + 1, self.1));
-        }
-
-        // left
-        if self.1 > 0 {
-            out.push(Point(self.0, self.1 - 1));
-        }
-
-        // right
-        if self.1 < lx {
-            out.push(Point(self.0, self.1 + 1));
-        }
-
-        out
-    }
-}
+type P = ((usize, usize), usize);
 
 fn main() {
-    let input = include_bytes!("../../input.txt")
+    let grid: Vec<&[u8]> = include_bytes!("../../input.txt")
         .split(|x| x == &b'\n')
-        .filter(|x| x != &[]);
+        .filter(|x| x != &[])
+        .collect();
 
-    let mut paths: Vec<usize> = Vec::new();
-    let grid: Vec<&[u8]> = input.collect();
-    for r in 0..grid.len() {
-        for c in 0..grid[r].len() {
-            if grid[r][c] == b'S' || grid[r][c] == b'a' {
-                if let Some(n) = sortest_path(Point(r, c), &grid) {
-                    paths.push(n);
-                }
-            }
-            if grid[r][c] == b'S' {
-                println!("Part 1: {}", sortest_path(Point(r,c), &grid).unwrap());
-            }
-        }
+    let points = grid
+        .iter()
+        .enumerate()
+        .map(|(y, a)| {
+            a.iter()
+                .enumerate()
+                .map(|(x, b)| ((y, x), *b))
+                .collect::<Vec<((usize, usize), u8)>>()
+        })
+        .flatten();
+
+    let args: Vec<String> = env::args().collect();
+    let preview = args.contains(&"-p".to_string());
+
+    let (start1, _): ((usize, usize), u8) = points.clone().find(|(_, b)| *b == b'S').unwrap();
+    if let Some(part1) = sortest_path(preview, &grid, b'E', vec![start1]) {
+        println!("part 1: {part1}");
     }
 
-    println!("Part 2: {}", paths.iter().min().unwrap());
+    let start2: Vec<(usize, usize)> = points.filter(|(_, b)| *b == b'a').map(|(p, _)| p).collect();
+    if let Some(part2) = sortest_path(preview, &grid, b'E', start2) {
+        println!("part 2: {part2}");
+    }
 }
 
-fn sortest_path(start: Point, input: &Vec<&[u8]>) -> Option<usize> {
-    let ly = input.len() - 1;
-    let lx = input[0].len() - 1;
-    let mut visited: Vec<Point> = Vec::new();
-    let mut to_visit: Vec<(Point, usize)> = vec![(start, 0)];
-    while let Some((visiting @ Point(y, x), steps)) = to_visit.pop() {
+fn sortest_path(
+    pr: bool,
+    grid: &Vec<&[u8]>,
+    target: u8,
+    start: Vec<(usize, usize)>,
+) -> Option<usize> {
+    let xl = (grid[0].len() - 1) as isize;
+    let yl = (grid.len() - 1) as isize;
+    let mut visited: HashSet<(usize, usize)> = HashSet::new();
+    let mut to_visit: VecDeque<P> = VecDeque::new();
+    for p in start {
+        to_visit.push_front((p, 0));
+    }
 
-        if input[y][x] == b'E' {
-            return Some(steps);
-        }
-
-        let mut standing = input[y][x];
-        if input[y][x] == b'S' {
+    while let Some(((y, x), steps)) = to_visit.pop_back() {
+        let mut standing = grid[y][x];
+        if standing == b'S' {
             standing = b'a';
         }
 
-        for p @ Point(a, b) in visiting.ns(lx, ly) {
-            let n = if input[a][b] == b'E' {
-                b'z'
-            } else {
-                input[a][b]
-            };
+        for (y, x) in [
+            (y as isize + 1, x as isize),
+            (y as isize - 1, x as isize),
+            (y as isize, x as isize + 1),
+            (y as isize, x as isize - 1),
+        ] {
+            if y >= 0 && y <= yl && x >= 0 && x <= xl {
+                let (y, x) = (y as usize, x as usize);
+                let mut destination = grid[y][x];
+                if destination == b'E' {
+                    destination = b'z';
+                }
+                if standing + 1 >= destination && !visited.contains(&(y, x)) {
+                    to_visit.push_front(((y, x), steps + 1));
+                    visited.insert((y, x));
 
-            if standing + 1 >= n && !visited.contains(&p) && !to_visit.contains(&(p, steps + 1)) {
-                to_visit.push((p, steps + 1));
+                    if target == grid[y][x] {
+                        return Some(steps + 1);
+                    }
+                }
             }
         }
-
-        visited.push(visiting);
-        to_visit.sort_by(|(_, s), (_, s2)| s2.cmp(s));
-        // printvisited(&visited, lx, ly);
+        visited.insert((y, x));
+        if pr {
+            printvisited(&visited, yl as usize, xl as usize);
+        }
     }
     None
 }
 
-// fn printvisited(v: &Vec<Point>, yd: usize, xd: usize) {
-//     std::process::Command::new("clear").status().unwrap();
-//     for y in 0..=yd {
-//         for x in 0..=xd {
-//             let p = Point(y, x);
-//             if v.contains(&p) {
-//                 print!("#");
-//             } else {
-//                 print!(".");
-//             }
-//         }
-//         print!("\n");
-//     }
-// }
+fn printvisited(v: &HashSet<(usize, usize)>, yd: usize, xd: usize) {
+    std::process::Command::new("clear").status().unwrap();
+    for y in 0..=yd {
+        for x in 0..=xd {
+            if v.contains(&(y, x)) {
+                print!("#");
+            } else {
+                print!(".");
+            }
+        }
+        print!("\n");
+    }
+}
