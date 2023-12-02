@@ -27,25 +27,9 @@
           rustfmt
           rustPackages.clippy
           rust-analyzer
+
+          python312
         ];
-      };
-    });
-
-    packages = forAllSystems ({pkgs}: {
-      default = pkgs.rustPlatform.buildRustPackage {
-        pname = "rust";
-        version = "0.0.1";
-
-        src = ./rust;
-
-        cargoLock = {
-          lockFile = ./rust/Cargo.lock;
-        };
-
-        # buildInputs = with pkgs; [];
-        # nativeBuildInputs = with pkgs; [
-        #   pkg-config
-        # ];
       };
     });
   };
