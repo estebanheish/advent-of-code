@@ -28,7 +28,11 @@
           rustPackages.clippy
           rust-analyzer
 
-          python312
+          nodePackages.pyright
+          (python3.withPackages (ps:
+            with ps; [
+              black
+            ]))
         ];
       };
     });
