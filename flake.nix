@@ -29,7 +29,7 @@
           rust-analyzer
 
           nodePackages.pyright
-          (python3.withPackages (ps: with ps; [black]))
+          (python3.withPackages (ps: with ps; [black sympy]))
           (haskellPackages.ghcWithPackages (ps: with ps; [random matrix split MemoTrie parallel memoize]))
         ];
       };
