@@ -28,9 +28,12 @@
           rustPackages.clippy
           rust-analyzer
 
-          nodePackages.pyright
+          pyright
           (python3.withPackages (ps: with ps; [black sympy networkx]))
           (haskellPackages.ghcWithPackages (ps: with ps; [random matrix split MemoTrie parallel memoize]))
+
+          kotlin-language-server
+          kotlin-native
         ];
       };
     });
