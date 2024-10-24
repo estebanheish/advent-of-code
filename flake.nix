@@ -33,8 +33,17 @@
           (haskellPackages.ghcWithPackages (ps: with ps; [random matrix split MemoTrie parallel memoize]))
 
           kotlin-language-server
-          kotlin-native
+          kotlin
+          jdk
         ];
+        shellHook = ''
+          export PATH="$PATH:${pkgs.writeScriptBin "runkotlin" ''
+            #!/usr/bin/env bash
+            set -e
+            kotlinc $1 -include-runtime -d /tmp/run.jar
+            java -jar /tmp/run.jar
+          ''}/bin"
+        '';
       };
     });
   };
