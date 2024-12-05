@@ -1,4 +1,4 @@
-import Data.List (transpose)
+import Data.List (tails, transpose)
 import Distribution.Utils.String (trim)
 
 main = do
@@ -7,35 +7,14 @@ main = do
   print (part2 input)
 
 part1 :: [String] -> Int
-part1 m = sum $ map (countXmas 0) (posibilities m)
-
-posibilities :: [String] -> [String]
-posibilities s = concat [s, map reverse s, v, map reverse v, d, map reverse d, d', map reverse d']
+part1 = sum . map (length . filter (`elem` ["XMAS", "SAMX"]) . transpose . take 4 . tails) . ps
   where
-    v = transpose s
-    d = diagonals s
-    d' = diagonals (reverse s)
+    ps s = concat [s, transpose s, diagonals s, diagonals (reverse s)]
 
-countXmas :: Int -> String -> Int
-countXmas c r | length r < 4 = c
-countXmas c r@('X' : 'M' : 'A' : 'S' : _) = countXmas (c + 1) (tail r)
-countXmas c r = countXmas c (tail r)
-
-diagonals :: [[a]] -> [[a]]
-diagonals = tail . go []
-  where
-    go b es_ =
-      [h | h : _ <- b] : case es_ of
-        [] -> transpose ts
-        e : es -> go (e : ts) es
-      where
-        ts = [t | _ : t <- b]
-
-isBoxXmas :: [String] -> Bool
-isBoxXmas ss = ((== 2) . length . filter (elem "MAS")) [d, d', map reverse d, map reverse d']
-  where
-    d = diagonals ss
-    d' = diagonals (map reverse ss)
+diagonals = map concat . transpose . zipWith (\ns xs -> ns ++ map (: []) xs) (iterate ([] :) [])
 
 part2 :: [String] -> Int
-part2 ss = (length . filter isBoxXmas) [map (take 3 . drop c) (take 3 (drop r ss)) | c <- [0 .. length (head ss) - 1], r <- [0 .. length ss - 1]]
+part2 ss = sum [1 | c <- [0 .. length (head ss) - 3], r <- [0 .. length ss - 3], all (`elem` ["MAS", "SAM"]) [d r c, d' r c]]
+  where
+    d r c = [ss !! r !! c, ss !! (r + 1) !! (c + 1), ss !! (r + 2) !! (c + 2)]
+    d' r c = [ss !! r !! (c + 2), ss !! (r + 1) !! (c + 1), ss !! (r + 2) !! c]
