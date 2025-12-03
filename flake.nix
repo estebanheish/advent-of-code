@@ -16,7 +16,13 @@
 
     forAllSystems = fn:
       nixpkgs.lib.genAttrs allSystems
-      (system: fn {pkgs = import nixpkgs {inherit system;};});
+      (system:
+        fn {
+          pkgs = import nixpkgs {
+            inherit system;
+            config.allowBroken = true;
+          };
+        });
   in {
     devShells = forAllSystems ({pkgs}: {
       default = pkgs.mkShell {
@@ -30,7 +36,7 @@
 
           pyright
           (python3.withPackages (ps: with ps; [black sympy networkx]))
-          (haskellPackages.ghcWithPackages (ps: with ps; [random matrix split MemoTrie parallel memoize]))
+          (haskellPackages.ghcWithPackages (ps: with ps; [random matrix split MemoTrie parallel])) # memoize
           haskell-language-server
 
           kotlin-language-server
